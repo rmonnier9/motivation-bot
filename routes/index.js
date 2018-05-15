@@ -68,6 +68,6 @@ router
 .get('/', function(req, res, next) {
   res.render('index', { title: 'Express' });
 })
-.get('/weatherWebhook', weatherWebhook);
+.post('/weatherWebhook', weatherWebhook);
 
 module.exports = router;
