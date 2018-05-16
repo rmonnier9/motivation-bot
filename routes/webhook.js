@@ -40,7 +40,7 @@ router.post('/', (req, res) => {
 router.get('/', (req, res) => {
   
   /** UPDATE YOUR VERIFY TOKEN **/
-  const VERIFY_TOKEN = "<YOUR_VERIFY_TOKEN>";
+  const VERIFY_TOKEN = "Toto75017";
   
   // Parse params from the webhook verification request
   let mode = req.query['hub.mode'];
