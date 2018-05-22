@@ -23,17 +23,17 @@ function handleMessage (sender_psid, received_message) {
   // Check if the message contains text
   if (received_message.text) {
     sendMessage(sender_psid, 'Salut ! Je suis Joe, ton coach sportif 💪')
-    sendMessage(sender_psid, 'J\'éspère que tu as le coeur accroché parce que tes muscles vont chauffer.')
+    setTimeout(() => { sendMessage(sender_psid, 'J\'espère que tu as le coeur accroché parce que tes muscles vont chauffer.'); }, 1000);
     // Create the payload for a basic text message
     response = {
       'attachment': {
         'type': 'template',
         'payload': {
           'template_type': 'button',
-          'text': 'Pour quoi tu veux t\'entrainer ?',
+          'text': 'Quel est ton objectif d\'entrainement ?',
           'buttons': [{
             'type': 'postback',
-            'title': 'Juste rester forme!',
+            'title': 'Rester en forme!',
             'payload': 'START_REGULAR'
           },
           {
@@ -52,7 +52,7 @@ function handleMessage (sender_psid, received_message) {
   }
 
   // Sends the response message
-  callSendAPI(sender_psid, response)
+  setTimeout(() => { callSendAPI(sender_psid, response); }, 2000);
 }
 
 // Handles messaging_postbacks events
@@ -64,9 +64,9 @@ function handlePostback (sender_psid, received_postback) {
 
   // Set the response based on the postback payload
   if (payload === 'START_REGULAR') {
-    response = { 'text': 'Ah donc tu n\'est pas très ambitieux. Je reviens vers toi dès que ton programme d\'entraînement est prêt!' }
+    response = { 'text': 'Tu n\'es donc pas très ambitieux. Cours un peu le matin et ça ira, pas besoin d\'un expert de pointe comme moi.' }
   } else if (payload === 'START_HALF_IRON_MAN') {
-    response = { 'text': 'A moitié courageux, c\'est toujours ça.' }
+    response = { 'text': 'A moitié courageux, c\'est déjà ça.' }
   } else if (payload === 'START_IRON_MAN') {
     response = { 'text': 'Excellent choix! Les prochaines semaines vont être difficile parce que... ça va chier.' }
   }
