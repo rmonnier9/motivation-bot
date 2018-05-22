@@ -33,7 +33,7 @@ function handleMessage (sender_psid, received_message) {
           'text': 'Pour quoi tu veux t\'entrainer ?',
           'buttons': [{
             'type': 'postback',
-            'title': 'Je veux juste garder la forme!',
+            'title': 'Juste rester forme!',
             'payload': 'START_REGULAR'
           },
           {
