@@ -185,7 +185,9 @@ router.post('/', async (req, res) => {
           handlePostback(senderPsid, webhook_event.postback)
         }
       } else {
-        handleAlreadySent();
+        if (webhook_event.message) {
+          handleAlreadySent(senderPsid, webhook_event.message);
+        }
       }
 
     })
