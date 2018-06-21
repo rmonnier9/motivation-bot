@@ -1,6 +1,6 @@
 const request = require('request')
 const router = require('express').Router()
-const MongoConnection = require('./MongoConnection')
+const MongoConnection = require('../MongoConnection')
 
 
 const PAGE_ACCESS_TOKEN = process.env.PAGE_ACCESS_TOKEN
@@ -171,10 +171,11 @@ router.post('/', async (req, res) => {
       // Get the sender PSID
       let sender_psid = webhook_event.sender.id
       console.log('Sender PSID: ' + sender_psid)
+      console.log(MongoConnection)
 
       // check if the user has already sent a message
       const usersCollection = MongoConnection.db.collection('users');
-      const user = await usersCollection.findOne({ psid });
+      const user = await usersCollection.findOne({ sender_psid });
       if (!user) {
         // Check if the event is a message or postback and
         // pass the event to the appropriate handler function
