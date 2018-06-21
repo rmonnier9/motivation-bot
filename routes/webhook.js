@@ -6,11 +6,11 @@ const MongoConnection = require('../MongoConnection')
 const PAGE_ACCESS_TOKEN = process.env.PAGE_ACCESS_TOKEN
 
 // Sends response messages via the Send API
-function callSendAPI (sender_psid, response) {
+function callSendAPI (senderPsid, response) {
   // Construct the message body
   let request_body = {
     'recipient': {
-      'id': sender_psid
+      'id': senderPsid
     },
     'message': response
   }
@@ -32,11 +32,11 @@ function callSendAPI (sender_psid, response) {
 }
 
 // Sends response messages via the Send API
-function callSendAPIReminder (sender_psid, response) {
+function callSendAPIReminder (senderPsid, response) {
   // Construct the message body
   let request_body = {
     'recipient': {
-      'id': sender_psid
+      'id': senderPsid
     },
     'message': response,
     'messaging_type': 'MESSAGE_TAG',
@@ -62,7 +62,7 @@ function callSendAPIReminder (sender_psid, response) {
 // NON_PROMOTIONAL_SUBSCRIPTION
 
 // Handles messages events
-function sendMessage (sender_psid, toSend) {
+function sendMessage (senderPsid, toSend) {
   let response
 
   // Create the payload for a basic text message
@@ -71,17 +71,17 @@ function sendMessage (sender_psid, toSend) {
   }
 
   // Sends the response message
-  callSendAPI(sender_psid, response)
+  callSendAPI(senderPsid, response)
 }
 
 // Handles messages events
-function handleMessage (sender_psid, received_message) {
+function handleMessage (senderPsid, received_message) {
   let response
 
   // Check if the message contains text
   if (received_message.text) {
-    sendMessage(sender_psid, 'Salut ! Je suis Joe, ton coach sportif 💪')
-    setTimeout(() => { sendMessage(sender_psid, 'J\'espère que tu as le coeur accroché parce que tes muscles vont chauffer.') }, 1000)
+    sendMessage(senderPsid, 'Salut ! Je suis Joe, ton coach sportif 💪')
+    setTimeout(() => { sendMessage(senderPsid, 'J\'espère que tu as le coeur accroché parce que tes muscles vont chauffer.') }, 1000)
     // Create the payload for a basic text message
     response = {
       'attachment': {
@@ -110,11 +110,11 @@ function handleMessage (sender_psid, received_message) {
   }
 
   // Sends the response message
-  setTimeout(() => { callSendAPI(sender_psid, response) }, 2000)
+  setTimeout(() => { callSendAPI(senderPsid, response) }, 2000)
 }
 
 // Handles messaging_postbacks events
-function handlePostback (sender_psid, received_postback) {
+function handlePostback (senderPsid, received_postback) {
   let response
 
   // Get the payload for the postback
@@ -129,7 +129,7 @@ function handlePostback (sender_psid, received_postback) {
     response = { 'text': 'Excellent choix! Les prochaines semaines vont être difficile parce que... ça va chier.' }
   }
   const newUser = {
-    psid: sender_psid,
+    senderPsid: senderPsid,
     program: payload,
     day: 0,
   }
@@ -137,19 +137,19 @@ function handlePostback (sender_psid, received_postback) {
   usersCollection.insertOne(newUser);
 
   // Send the message to acknowledge the postback
-  callSendAPI(sender_psid, response)
+  callSendAPI(senderPsid, response)
 }
 
-const handleAlreadySent = async (sender_psid, received_message) => {
+const handleAlreadySent = async (senderPsid, received_message) => {
   let message
 
   const usersCollection = MongoConnection.db.collection('users');
-  const user = await usersCollection.findOne({ psid });
+  const user = await usersCollection.findOne({ senderPsid });
   
   // Check if the message contains text
   if (received_message.text) {
     message = `You are enrolled in the ${user.program} training.`
-    sendMessage(sender_psid, message)
+    sendMessage(senderPsid, message)
   }
 }
 
@@ -169,20 +169,20 @@ router.post('/', async (req, res) => {
       console.log(webhook_event)
 
       // Get the sender PSID
-      let sender_psid = webhook_event.sender.id
-      console.log('Sender PSID: ' + sender_psid)
+      let senderPsid = webhook_event.sender.id
+      console.log('Sender PSID: ' + senderPsid)
       console.log(MongoConnection)
 
       // check if the user has already sent a message
       const usersCollection = MongoConnection.db.collection('users');
-      const user = await usersCollection.findOne({ sender_psid });
+      const user = await usersCollection.findOne({ senderPsid });
       if (!user) {
         // Check if the event is a message or postback and
         // pass the event to the appropriate handler function
         if (webhook_event.message) {
-          handleMessage(sender_psid, webhook_event.message)
+          handleMessage(senderPsid, webhook_event.message)
         } else if (webhook_event.postback) {
-          handlePostback(sender_psid, webhook_event.postback)
+          handlePostback(senderPsid, webhook_event.postback)
         }
       } else {
         handleAlreadySent();
