@@ -54,6 +54,9 @@ MongoConnection.connect().then(() => {
   const CronJob = cron.CronJob
   const job = new CronJob('0 7 * * *', () => { sendReminder() })
   job.start()
+  setTimeout(() => {
+    sendReminder();
+  }, 10000)
 
   // if the Node process ends, close the Mongoose connection
   const gracefulExit = () => {
