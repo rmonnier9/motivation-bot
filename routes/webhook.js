@@ -1,27 +1,34 @@
 const request = require('request')
 const router = require('express').Router()
 const MongoConnection = require('../MongoConnection')
+const moment = require('moment')
+const trainingPlans = require('../trainingPlans')
 
+const programs = {
+  'START_REGULAR': 'Maintien en forme',
+  'START_HALF_IRON_MAN': 'Demi Ironman',
+  'START_IRON_MAN': 'Ironman'
+}
 
 const PAGE_ACCESS_TOKEN = process.env.PAGE_ACCESS_TOKEN
 
 // Sends response messages via the Send API
 function callSendAPI (senderPsid, response) {
   // Construct the message body
-  let request_body = {
+  let requestBody = {
     'recipient': {
       'id': senderPsid
     },
     'message': response
   }
-  console.log(request_body)
+  console.log(requestBody)
 
   // Send the HTTP request to the Messenger Platform
   request({
-    'uri': 'https://graph.facebook.com/v2.6/me/messages',
+    'uri': process.env.MESSAGING_PLATFORM,
     'qs': { 'access_token': PAGE_ACCESS_TOKEN },
     'method': 'POST',
-    'json': request_body
+    'json': requestBody
   }, (err, res, body) => {
     if (!err) {
       console.log('message sent!')
@@ -30,9 +37,6 @@ function callSendAPI (senderPsid, response) {
     }
   })
 }
-
-
-
 
 // Handles messages events
 function sendMessage (senderPsid, toSend) {
@@ -48,11 +52,11 @@ function sendMessage (senderPsid, toSend) {
 }
 
 // Handles messages events
-function handleMessage (senderPsid, received_message) {
+function handleMessage (senderPsid, receivedMessage) {
   let response
 
   // Check if the message contains text
-  if (received_message.text) {
+  if (receivedMessage.text) {
     sendMessage(senderPsid, 'Salut ! Je suis Joe, ton coach sportif 💪')
     setTimeout(() => { sendMessage(senderPsid, 'J\'espère que tu as le coeur accroché parce que tes muscles vont chauffer.') }, 1000)
     // Create the payload for a basic text message
@@ -87,11 +91,11 @@ function handleMessage (senderPsid, received_message) {
 }
 
 // Handles messaging_postbacks events
-function handlePostback (senderPsid, received_postback) {
+function handlePostback (senderPsid, receivedPostback) {
   let response
 
   // Get the payload for the postback
-  let payload = received_postback.payload
+  let payload = receivedPostback.payload
 
   // Set the response based on the postback payload
   if (payload === 'START_REGULAR') {
@@ -101,31 +105,49 @@ function handlePostback (senderPsid, received_postback) {
   } else if (payload === 'START_IRON_MAN') {
     response = { 'text': 'Excellent choix! Les prochaines semaines vont être difficile parce que... ça va chier.' }
   }
+
+  let startingDay
+  const dayINeed = 1
+  const today = moment().isoWeekday()
+  // if we haven't yet passed the day of the week that I need:
+  if (today <= dayINeed) {
+    // then just give me this week's instance of that day
+    startingDay = moment().isoWeekday(dayINeed)
+  } else {
+    // otherwise, give me *next week's* instance of that same day
+    startingDay = moment().add(1, 'weeks').isoWeekday(dayINeed)
+  }
   const newUser = {
     senderPsid: senderPsid,
     program: payload,
-    day: 0,
+    startingDay
   }
-  const usersCollection = MongoConnection.db.collection('users');
-  usersCollection.insertOne(newUser);
+  const usersCollection = MongoConnection.db.collection('users')
+  usersCollection.insertOne(newUser)
 
   // Send the message to acknowledge the postback
   callSendAPI(senderPsid, response)
 }
 
-const handleAlreadySent = async (senderPsid, received_message) => {
+const handleAlreadySent = async (senderPsid, receivedMessage) => {
   let message
 
-  const usersCollection = MongoConnection.db.collection('users');
-  const user = await usersCollection.findOne({ senderPsid });
-  
+  const usersCollection = MongoConnection.db.collection('users')
+  const user = await usersCollection.findOne({ senderPsid })
+
   // Check if the message contains text
-  if (received_message.text) {
-    message = `You are enrolled in the ${user.program} training.`
+  if (receivedMessage.text) {
+    const { startingDay } = user
+    const now = moment()
+    const trainingDay = Math.floor(moment.duration(now.diff(startingDay).asDays()))
+    if (trainingDay < 0) {
+      message = `L'entraînement commence dans ${-trainingDay} jours!`
+    } else {
+      message = trainingPlans[trainingDay].description
+    }
     sendMessage(senderPsid, message)
   }
 }
-
 
 // Accepts POST requests at /webhook endpoint
 router.post('/', async (req, res) => {
@@ -147,8 +169,8 @@ router.post('/', async (req, res) => {
       console.log(MongoConnection)
 
       // check if the user has already sent a message
-      const usersCollection = MongoConnection.db.collection('users');
-      const user = await usersCollection.findOne({ senderPsid });
+      const usersCollection = MongoConnection.db.collection('users')
+      const user = await usersCollection.findOne({ senderPsid })
       if (!user) {
         // Check if the event is a message or postback and
         // pass the event to the appropriate handler function
@@ -159,10 +181,9 @@ router.post('/', async (req, res) => {
         }
       } else {
         if (webhook_event.message) {
-          handleAlreadySent(senderPsid, webhook_event.message);
+          handleAlreadySent(senderPsid, webhook_event.message)
         }
       }
-
     })
 
     // Return a '200 OK' response to all events

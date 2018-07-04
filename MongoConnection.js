@@ -1,18 +1,19 @@
 
-const { MongoClient } = require('mongodb');
+const { MongoClient } = require('mongodb')
 
 const MongoConnection = {
-  connect() {
+  connect () {
     return new Promise((resolve, reject) => {
-      MongoClient.connect(process.env.MONGODB_URI, (err, client) => {
+      MongoClient.connect(process.env.MONGODB_URI, { useNewUrlParser: true }, (err, client) => {
         if (err) {
-          reject(err);
+          reject(err)
         }
-        this.db = client.db('motivation');
-        resolve();
-      });
-    });
-  },
-};
+        this.db = client.db('motivation')
+        this.client = client
+        resolve()
+      })
+    })
+  }
+}
 
-module.exports = MongoConnection;
+module.exports = MongoConnection

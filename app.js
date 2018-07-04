@@ -1,4 +1,8 @@
-require('dotenv').config()
+if (process.env.NODE_ENV === 'production') {
+  require('dotenv').config()
+} else {
+  require('dotenv').config({ path: './.env.dev' })
+}
 const createError = require('http-errors')
 const express = require('express')
 const path = require('path')
@@ -60,7 +64,7 @@ MongoConnection.connect().then(() => {
 
   // if the Node process ends, close the Mongoose connection
   const gracefulExit = () => {
-    MongoConnection.db.close(() => {
+    MongoConnection.client.close(() => {
       console.log('Mongo connection successfully disconnected through app termination')
       process.exit(0)
     })

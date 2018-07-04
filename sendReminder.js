@@ -3,7 +3,6 @@ const request = require('request')
 
 const PAGE_ACCESS_TOKEN = process.env.PAGE_ACCESS_TOKEN
 
-
 // NON_PROMOTIONAL_SUBSCRIPTION
 
 const sendReminder = async () => {
@@ -44,7 +43,7 @@ function callSendAPIReminder (senderPsid, response) {
 
   // Send the HTTP request to the Messenger Platform
   request({
-    'uri': 'https://graph.facebook.com/v2.6/me/messages',
+    'uri': process.env.MESSAGING_PLATFORM,
     'qs': { 'access_token': PAGE_ACCESS_TOKEN },
     'method': 'POST',
     'json': request_body
