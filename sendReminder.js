@@ -1,7 +1,7 @@
 const MongoConnection = require('./MongoConnection')
 const request = require('request')
 const moment = require('moment')
-const trainingPlans = require('../trainingPlans')
+const trainingPlans = require('./trainingPlans')
 
 const PAGE_ACCESS_TOKEN = process.env.PAGE_ACCESS_TOKEN
 
