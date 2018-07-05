@@ -139,7 +139,7 @@ const handleAlreadySent = async (senderPsid, receivedMessage) => {
   if (receivedMessage.text) {
     const { startingDay } = user
     const now = moment()
-    const trainingDay = Math.floor(moment.duration(now.diff(startingDay).asDays()))
+    const trainingDay = Math.floor(moment.duration(now.diff(startingDay)).asDays())
     if (trainingDay < 0) {
       message = `L'entraînement commence dans ${-trainingDay} jours!`
     } else {
