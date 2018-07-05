@@ -117,6 +117,7 @@ function handlePostback (senderPsid, receivedPostback) {
     // otherwise, give me *next week's* instance of that same day
     startingDay = moment().add(1, 'weeks').isoWeekday(dayINeed)
   }
+  startingDay = startingDay.toDate()
   const newUser = {
     senderPsid: senderPsid,
     program: payload,
