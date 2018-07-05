@@ -1,5 +1,7 @@
 const MongoConnection = require('./MongoConnection')
 const request = require('request')
+const moment = require('moment')
+const trainingPlans = require('../trainingPlans')
 
 const PAGE_ACCESS_TOKEN = process.env.PAGE_ACCESS_TOKEN
 
@@ -11,12 +13,21 @@ const sendReminder = async () => {
   const users = await usersCollection.find().toArray();
   console.log(users)
   users.forEach((user) => {
-    sendReminderMsg(user.senderPsid, 'Training needed today !');
+    let message
+    const { startingDay } = user
+    const now = moment()
+    const trainingDay = Math.floor(moment.duration(now.diff(startingDay)).asDays())
+    if (trainingDay < 0) {
+      message = `L'entraînement commence dans ${-trainingDay} jours!`
+    } else {
+      message = trainingPlans[trainingDay].description
+    }
+    sendReminderMsg(user.senderPsid, message)
   })
 }
 
 // Handles messages events
-function sendReminderMsg(senderPsid, toSend) {
+function sendReminderMsg (senderPsid, toSend) {
   let response
 
   // Create the payload for a basic text message
